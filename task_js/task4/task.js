@@ -40,6 +40,12 @@ function removeAllChild(elm){
  * };
  */
 var aqiData = [];
+var tagCity = false; //城市false 未通过验证  true 通过验证
+var tagQt = false; //温度
+var oCity = id('aqi-city-input');
+var oQt = id('aqi-value-input');
+var oTab = id('aqi-table');
+var oAdd = id('add-btn');
 
 /**
  * 从用户输入中获取数据，向aqiData中增加一条数据
@@ -47,19 +53,56 @@ var aqiData = [];
  */
 function addAqiData() {
 	var city,qt;
-	var oCity = id('aqi-city-input');
-	var oQt = id('aqi-value-input');	
-	city = oCity.value;
-	qt = oQt.value;
-	aqiData.push([city,qt]);
+	var result;
+
+	//去两端空格
+	city = oCity.value.trim();
+	qt = oQt.value.trim();
+	
+	result = RegStr(city,qt);
+	if(result.flag){
+		aqiData.push([city,qt]);
+		//初始化
+		oCity.value='';
+		oQt.value='';
+	}else{
+		alert(result.errMsg);
+	}
+}
+
+
+
+function RegStr(city,qt){
+	tagCity = false;
+	tagQt = false;
+	var regex = /^[\u4e00-\u9fa5a-zA-Z\/\(\)]+$/;
+	var errMsg = [];
+	var flag;
+
+	if(regex.test(city)){
+		tagCity=true;
+	}else{
+		errMsg.push('城市必须是字母跟汉字结合');
+	}
+
+	if(qt == parseInt(qt)){
+		tagQt = true;
+	}else{
+		errMsg.push('温度必须是整数');
+	}
+
+	flag = tagCity && tagQt;
+	return {
+		flag:flag,
+		errMsg:errMsg
+	}
 }
 
 /**
  * 渲染aqi-table表格
  */
 function renderAqiList() {
-	var oTab = id('aqi-table'),		
-		oHeadTr = create('tr'),
+	var oHeadTr = create('tr'),
 		oHeadCity = create('td'),
 		oHeadQt = create('td'),
 		oBtn2 = create('td')
@@ -103,6 +146,7 @@ function renderAqiList() {
  * 点击add-btn时的处理逻辑
  * 获取用户输入，更新数据，并进行页面呈现的更新
  */
+
 function addBtnHandle() {
   addAqiData();
   renderAqiList();
@@ -112,30 +156,24 @@ function addBtnHandle() {
  * 点击各个删除按钮的时候的处理逻辑
  * 获取哪个城市数据被删，删除数据，更新表格显示
  */
-function delBtnHandle() {
-  // do sth.
-  var oDel = this.getElementsByTagName('td')[0];
-  console.log(oDel.innerHTML);
+function delBtnHandle(e) {
+  var oCity = e.target.parentElement.parentElement.firstChild;
   var j;
   for(var i=0;i<aqiData.length;i++){
-  	if(aqiData[i][0] == oDel.innerHTML){
+  	if(aqiData[i][0] == oCity.innerHTML){
   		j = i;
   		break;
   	}
   }
-  debugger;
-
   aqiData.splice(j,1);
   renderAqiList();
 }
 
 function init() {
   //debugger;
-  // 在这下面给add-btn绑定一个点击事件，点击时触发addBtnHandle函数
-  var oAdd = id('add-btn')
+  //在这下面给add-btn绑定一个点击事件，点击时触发addBtnHandle函数
   addEvent(oAdd,'click',addBtnHandle);
-  // 想办法给aqi-table中的所有删除按钮绑定事件，触发delBtnHandle函数
-  var oTab = id('aqi-table')
+  //想办法给aqi-table中的所有删除按钮绑定事件，触发delBtnHandle函数
   addEvent(oTab,'click',delBtnHandle);
 
 }
